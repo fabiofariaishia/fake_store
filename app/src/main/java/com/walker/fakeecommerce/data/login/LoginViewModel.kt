@@ -2,12 +2,17 @@ package com.walker.fakeecommerce.data.login
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.walker.fakeecommerce.UserRepository
 import com.walker.fakeecommerce.utils.Validator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor() : ViewModel() {
+class LoginViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val TAG = LoginViewModel::class.simpleName
 
@@ -35,8 +40,9 @@ class LoginViewModel @Inject constructor() : ViewModel() {
             }
 
             is LoginUIEvent.LoginButtonClicked -> {
-                login(event.onSuccess, event.onFailure)
-                validateLoginUIDataWithRules()
+                viewModelScope.launch {
+                    login(event.onSuccess, event.onFailure)
+                }
             }
         }
     }
@@ -59,11 +65,23 @@ class LoginViewModel @Inject constructor() : ViewModel() {
 
     }
 
-    private fun login(onSuccess: () -> Unit, onFailure: () -> Unit) {
+    private suspend fun login(onSuccess: () -> Unit, onFailure: () -> Unit) {
 
         loginInProgress.value = true
         val email = loginUIState.value.email
         val password = loginUIState.value.password
+
+        val result = userRepository.postLogin(email, password)
+
+        if (result.isSuccessful) {
+            result.body().let {
+                onSuccess()
+            } ?: kotlin.run {
+                onFailure()
+            }
+        } else {
+            onFailure()
+        }
 
         if (email == "test@test.com" && password == "teste123") {
             onSuccess()
