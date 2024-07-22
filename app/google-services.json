@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "213906742327",
+    "project_id": "fakeecommerce-f1662",
+    "storage_bucket": "fakeecommerce-f1662.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:213906742327:android:e1ca6d7cc3c890ce1d73b2",
+        "android_client_info": {
+          "package_name": "com.walker.fakeecommerce"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxy2dmUQ5_QlNdHwDJBaO_XbnoD_82Qxg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

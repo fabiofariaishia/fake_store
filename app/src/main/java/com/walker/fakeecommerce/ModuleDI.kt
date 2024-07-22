@@ -1,5 +1,7 @@
 package com.walker.fakeecommerce
 
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.walker.fakeecommerce.datasources.UserDataSource
 import com.walker.fakeecommerce.network.ApiService
 import dagger.Module
@@ -13,6 +15,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class ModuleDI {
+
+    @Provides
+    @Singleton
+    fun provideStorageReference(): StorageReference = FirebaseStorage.getInstance().reference
 
     @Provides
     fun provideBaseUrl() = "https://api.escuelajs.co/api/v1/"
