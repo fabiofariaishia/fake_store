@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.storage.StorageReference
+import com.walker.fakeecommerce.UserRepository
 import com.walker.fakeecommerce.utils.Validator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -13,7 +15,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor(): ViewModel() {
+class SignUpViewModel @Inject constructor(
+    private val storageReference: StorageReference,
+    private val userRepository: UserRepository
+): ViewModel() {
 
     private val TAG = SignUpViewModel::class.simpleName
 
@@ -147,6 +152,22 @@ class SignUpViewModel @Inject constructor(): ViewModel() {
         onFailure: () -> Unit
     ) {
         signUpInProgress.value = true
+
+        val storageRefPhoto = storageReference.child("photos/$email")
+
+        val task = storageRefPhoto.putFile(image)
+
+        task.addOnSuccessListener {
+            storageRefPhoto.downloadUrl.addOnSuccessListener {
+                postUser(email, password, image, name, onSuccess, onFailure)
+            }
+        }.addOnFailureListener {
+            onFailure()
+        }
+        /****************************************
+         * Paramos no minuto 21:30 da aula...   *
+         ****************************************/
+
         postUser(email, password, "http://image.url.fake".toUri(), name, onSuccess, onFailure)
     }
 
@@ -159,7 +180,13 @@ class SignUpViewModel @Inject constructor(): ViewModel() {
         onFailure: () -> Unit
     ) {
         viewModelScope.launch {
-            delay(500)
+            val result = userRepository.postUser(name, email, password, image.toString())
+
+            if (result.isSuccessful) {
+                onSuccess()
+            } else {
+                onFailure()
+            }
 
             onSuccess()
 
