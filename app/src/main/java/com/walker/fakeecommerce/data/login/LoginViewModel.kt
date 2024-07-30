@@ -4,14 +4,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.walker.fakeecommerce.UserRepository
+import com.walker.fakeecommerce.utils.SessionManager
 import com.walker.fakeecommerce.utils.Validator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.Period
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val TAG = LoginViewModel::class.simpleName
@@ -21,6 +25,27 @@ class LoginViewModel @Inject constructor(
     var allValidationsPassed = mutableStateOf(false)
 
     var loginInProgress = mutableStateOf(false)
+
+    var logoutUser = mutableStateOf(false)
+
+    init {
+        loginUIState.value.loadingAlreadyLogged = true
+        val tokenExists = sessionManager.readToken() != null
+
+        if (tokenExists) {
+            val tokenDate = sessionManager.readDate()
+
+            if (Period.between(LocalDate.parse(tokenDate), LocalDate.now()).days > 20) {
+                onEvent(LoginUIEvent.LogoutUser)
+                logoutUser.value = true
+            } else {
+                loginUIState.value.alreadyLogged = true
+            }
+        }
+
+        loginUIState.value.loadingAlreadyLogged = false
+
+    }
 
 
     fun onEvent(event: LoginUIEvent) {
@@ -43,6 +68,11 @@ class LoginViewModel @Inject constructor(
                 viewModelScope.launch {
                     login(event.onSuccess, event.onFailure)
                 }
+            }
+
+            is LoginUIEvent.LogoutUser -> {
+                sessionManager.logout()
+                logoutUser.value = true
             }
         }
     }
@@ -74,21 +104,16 @@ class LoginViewModel @Inject constructor(
         val result = userRepository.postLogin(email, password)
 
         if (result.isSuccessful) {
-            result.body().let {
+            result.body()?.let {
                 onSuccess()
-            } ?: kotlin.run {
+                sessionManager.writeToken(it)
+            } ?: run {
                 onFailure()
             }
         } else {
             onFailure()
         }
 
-        if (email == "test@test.com" && password == "teste123") {
-            onSuccess()
-        } else {
-            onFailure()
-        }
         loginInProgress.value = false
     }
-
 }

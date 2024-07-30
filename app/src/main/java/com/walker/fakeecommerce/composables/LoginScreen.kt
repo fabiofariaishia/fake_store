@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.walker.fakeecommerce.components.HeadingTextComponent
 import com.walker.fakeecommerce.components.MyTextFieldComponent
@@ -36,78 +37,109 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val alreadyLogged = loginViewModel.loginUIState.value.alreadyLogged
+    val loadingAlreadyLogged = loginViewModel.loginUIState.value.loadingAlreadyLogged
+    val logoutUser = loginViewModel.logoutUser.value
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(28.dp)
-        ) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-
-                NormalTextComponent(value = stringResource(id = R.string.login))
-                HeadingTextComponent(value = stringResource(id = R.string.welcome))
-                Spacer(modifier = Modifier.height(20.dp))
-
-                MyTextFieldComponent(labelValue = stringResource(id = R.string.email),
-                    Icons.Default.Message,
-                    onTextChanged = {
-                        loginViewModel.onEvent(LoginUIEvent.EmailChanged(it))
-                    },
-                    errorStatus = loginViewModel.loginUIState.value.emailError
-                )
-
-                PasswordTextFieldComponent(
-                    labelValue = stringResource(id = R.string.password),
-                    Icons.Default.Lock,
-                    onTextSelected = {
-                        loginViewModel.onEvent(LoginUIEvent.PasswordChanged(it))
-                    },
-                    errorStatus = loginViewModel.loginUIState.value.passwordError
-                )
-
-                Spacer(modifier = Modifier.height(70.dp))
-
-                ButtonComponent(
-                    value = stringResource(id = R.string.login),
-                    onButtonClicked = {
-                        loginViewModel.onEvent(
-                            LoginUIEvent.LoginButtonClicked(
-                                onSuccess = {
-                                    navController.navigate(Screen.PRODUCTS_SCREEN.name) {
-                                        popUpTo(0)
-                                    }
-                                },
-                                onFailure = {
-                                    Toast.makeText(context, "Login falhou! Usuário ou senha incorreto(s)", Toast.LENGTH_SHORT).show()
-                                }
-                            ))
-                    },
-                    isEnabled = loginViewModel.allValidationsPassed.value,
-                    imageVector = Icons.Default.Login
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                DividerTextComponent()
-
-                ClickableLoginTextComponent(tryingToLogin = false, onTextSelected = {
-                    navController.navigate(Screen.SIGNUP_SCREEN.name)
-                })
-            }
-        }
-
-        if(loginViewModel.loginInProgress.value) {
-            CircularProgressIndicator()
+    fun onSucess() {
+        navController.navigate(Screen.PRODUCTS_SCREEN.name) {
+            popUpTo(0)
         }
     }
+
+    if (logoutUser) {
+        navController.navigate(Screen.LOGIN_SCREEN.name) {
+            popUpTo(
+                navController.graph.findStartDestination().id
+            ) {
+                saveState = true
+            }
+
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    if (alreadyLogged) {
+        onSucess()
+    }
+
+    if (!loadingAlreadyLogged && !alreadyLogged) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(28.dp)
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+
+                    NormalTextComponent(value = stringResource(id = R.string.login))
+                    HeadingTextComponent(value = stringResource(id = R.string.welcome))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    MyTextFieldComponent(labelValue = stringResource(id = R.string.email),
+                        Icons.Default.Message,
+                        onTextChanged = {
+                            loginViewModel.onEvent(LoginUIEvent.EmailChanged(it))
+                        },
+                        errorStatus = loginViewModel.loginUIState.value.emailError
+                    )
+
+                    PasswordTextFieldComponent(
+                        labelValue = stringResource(id = R.string.password),
+                        Icons.Default.Lock,
+                        onTextSelected = {
+                            loginViewModel.onEvent(LoginUIEvent.PasswordChanged(it))
+                        },
+                        errorStatus = loginViewModel.loginUIState.value.passwordError
+                    )
+
+                    Spacer(modifier = Modifier.height(70.dp))
+
+                    if(!loginViewModel.loginInProgress.value) {
+                        ButtonComponent(
+                            value = stringResource(id = R.string.login),
+                            onButtonClicked = {
+                                loginViewModel.onEvent(
+                                    LoginUIEvent.LoginButtonClicked(
+                                        onSuccess = {
+                                            onSucess()
+                                        },
+                                        onFailure = {
+                                            Toast.makeText(context, "Login falhou! Usuário ou senha incorreto(s)", Toast.LENGTH_SHORT).show()
+                                        }
+                                    ))
+                            },
+                            isEnabled = loginViewModel.allValidationsPassed.value,
+                            imageVector = Icons.Default.Login
+                        )
+                    } else {
+                        CircularProgressIndicator()
+                    }
+
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    DividerTextComponent()
+
+                    ClickableLoginTextComponent(tryingToLogin = false, onTextSelected = {
+                        navController.navigate(Screen.SIGNUP_SCREEN.name)
+                    })
+                }
+            }
+
+
+        }
+    }
+
 }
