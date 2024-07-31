@@ -1,4 +1,4 @@
-package com.walker.fakeecommerce
+package com.walker.fakeecommerce.repositories
 
 import com.walker.fakeecommerce.datasources.UserDataSource
 import javax.inject.Inject

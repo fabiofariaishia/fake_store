@@ -3,7 +3,7 @@ package com.walker.fakeecommerce.data.login
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.walker.fakeecommerce.UserRepository
+import com.walker.fakeecommerce.repositories.UserRepository
 import com.walker.fakeecommerce.utils.SessionManager
 import com.walker.fakeecommerce.utils.Validator
 import dagger.hilt.android.lifecycle.HiltViewModel
